@@ -232,3 +232,138 @@ document.addEventListener('DOMContentLoaded', function() {
         overlay.classList.remove('show');
     });
 });
+
+let polls = new Map();
+
+function openPollModal() {
+    document.getElementById('pollModal').style.display = 'block';
+}
+
+function closePollModal() {
+    document.getElementById('pollModal').style.display = 'none';
+    document.getElementById('pollQuestion').value = '';
+    document.getElementById('pollOptions').innerHTML = `
+        <input type="text" class="poll-option" placeholder="Alternativ 1" maxlength="50">
+        <input type="text" class="poll-option" placeholder="Alternativ 2" maxlength="50">
+    `;
+}
+
+function addPollOption() {
+    const optionsDiv = document.getElementById('pollOptions');
+    const optionCount = optionsDiv.getElementsByClassName('poll-option').length;
+    if (optionCount < 5) {
+        const newOption = document.createElement('input');
+        newOption.type = 'text';
+        newOption.className = 'poll-option';
+        newOption.placeholder = `Alternativ ${optionCount + 1}`;
+        newOption.maxLength = 50;
+        optionsDiv.appendChild(newOption);
+    }
+}
+
+function createPoll() {
+    const question = document.getElementById('pollQuestion').value.trim();
+    const optionInputs = document.querySelectorAll('.poll-option');
+    const options = Array.from(optionInputs)
+        .map(input => input.value.trim())
+        .filter(value => value !== '');
+
+    if (!question || options.length < 2) {
+        alert('Vennligst fyll ut spørsmål og minst to alternativer');
+        return;
+    }
+
+    const pollId = Date.now().toString();
+    const pollData = {
+        id: pollId,
+        question: question,
+        options: options,
+        votes: Object.fromEntries(options.map(opt => [opt, 0])),
+        voters: []
+    };
+
+    socket.emit('new_poll', {
+        pollData: pollData,
+        room: chatRoom
+    });
+
+    closePollModal();
+}
+
+function votePoll(pollId, option) {
+    const poll = polls.get(pollId);
+    if (poll && !poll.voters.includes(currentUser)) {
+        socket.emit('poll_vote', {
+            pollData: poll,
+            option: option,
+            voter: currentUser,
+            room: chatRoom
+        });
+    } else if (poll.voters.includes(currentUser)) {
+        // Optional: Show message that user already voted
+        alert('Du har allerede stemt på denne avstemningen');
+    }
+}
+
+// Add these socket listeners
+socket.on('new_poll', (data) => {
+    polls.set(data.id, data);
+    addPollMessage(data);
+});
+
+socket.on('poll_update', (data) => {
+    polls.set(data.id, data);
+    updatePollResults(data);
+});
+
+function addPollMessage(pollData) {
+    const chatBox = document.getElementById('chatBox');
+    const pollDiv = document.createElement('div');
+    pollDiv.className = 'poll-message';
+    pollDiv.id = `poll-${pollData.id}`;
+    
+    let optionsHtml = pollData.options.map(option => `
+        <button class="poll-option-btn" onclick="votePoll('${pollData.id}', '${option}')">
+            ${option}
+            <div class="poll-bar" style="width: 0%"></div>
+            <span class="vote-count">0 stemmer</span>
+        </button>
+    `).join('');
+
+    pollDiv.innerHTML = `
+        <div class="poll-question">${pollData.question}</div>
+        <div class="poll-options">
+            ${optionsHtml}
+        </div>
+    `;
+    
+    chatBox.appendChild(pollDiv);
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+function updatePollResults(pollData) {
+    const pollDiv = document.getElementById(`poll-${pollData.id}`);
+    if (!pollDiv) return;
+
+    const totalVotes = Object.values(pollData.votes).reduce((a, b) => a + b, 0);
+    
+    pollData.options.forEach(option => {
+        const votes = pollData.votes[option];
+        const percentage = totalVotes > 0 ? (votes / totalVotes) * 100 : 0;
+        
+        // Update the selector to properly find the button
+        const optionBtn = Array.from(pollDiv.querySelectorAll('.poll-option-btn'))
+            .find(btn => btn.textContent.includes(option));
+        
+        if (optionBtn) {
+            optionBtn.querySelector('.poll-bar').style.width = `${percentage}%`;
+            optionBtn.querySelector('.vote-count').textContent = `${votes} stemmer`;
+            
+            // Disable button if user has voted
+            if (pollData.voters.includes(currentUser)) {
+                optionBtn.disabled = true;
+                optionBtn.style.cursor = 'default';
+            }
+        }
+    });
+}

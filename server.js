@@ -38,6 +38,19 @@ io.on('connection', (socket) => {
         io.to(socket.room).emit('activeUsers', getActiveUsersInRoom(socket.room));
         io.emit('roomInfo', getRoomInfo());
     });
+
+    socket.on('new_poll', (data) => {
+        io.to(data.room).emit('new_poll', data.pollData);
+    });
+
+    socket.on('poll_vote', (data) => {
+        const poll = data.pollData;
+        if (!poll.voters.includes(data.voter)) {
+            poll.votes[data.option]++;
+            poll.voters.push(data.voter);
+            io.to(data.room).emit('poll_update', poll);
+        }
+    });
 });
 
 function getActiveUsersInRoom(room) {
