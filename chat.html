@@ -39,6 +39,13 @@
                 <div id="charCount" class="char-count">0/300</div>
             </div>
         </div>
+
+        <div class="private-chats-container" id="privateChatsContainer">
+            <div class="private-chats-header">
+            </div>
+            </div>
+            <div class="private-chats" id="privateChats"></div>
+        </div>
     </div>
     <div id="typingIndicator" class="typing-indicator"></div>
     <script src="/socket.io/socket.io.js"></script>
@@ -60,6 +67,17 @@
                 <button onclick="createPoll()" class="poll-modal-btn primary">
                     <i class="fas fa-check"></i> Opprett avstemning
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="private-message-modal" id="privateMessageModal">
+        <div class="private-modal-content">
+            <span class="close" onclick="closePrivateModal()">&times;</span>
+            <h2>Send privat melding til <span id="recipientName"></span></h2>
+            <div class="private-message-input">
+                <input type="text" id="privateMessage" placeholder="Skriv en privat melding..." maxlength="300">
+                <button onclick="sendPrivateMessage()">Send</button>
             </div>
         </div>
     </div>

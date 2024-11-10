@@ -12,8 +12,10 @@ socket.emit('join', { username: currentUser, room: chatRoom });
 
 // Listen for messages
 socket.on('message', (data) => {
-    console.log('Message from server:', data);
-    addMessage(data.username, data.message);
+    // Only add messages that are not private to the main chat
+    if (!data.isPrivate && !data.private) {
+        addMessage(data.username, data.message);
+    }
 });
 
 // Listen for active users list
@@ -148,6 +150,13 @@ function renderActiveUsers(users) {
             <span>${user}</span>
             <div class="online-indicator"></div>
         `;
+        
+        // Only add click handler if it's not the current user
+        if (user !== currentUser) {
+            userDiv.style.cursor = 'pointer';
+            userDiv.onclick = () => openPrivateChat(user);
+        }
+        
         usersList.appendChild(userDiv);
     });
 }
@@ -367,3 +376,186 @@ function updatePollResults(pollData) {
         }
     });
 }
+
+function openPrivateMessage(username) {
+    document.getElementById('privateMessageModal').style.display = 'block';
+    document.getElementById('recipientName').textContent = username;
+    document.getElementById('privateMessage').focus();
+}
+
+function closePrivateModal() {
+    document.getElementById('privateMessageModal').style.display = 'none';
+    document.getElementById('privateMessage').value = '';
+}
+
+function sendPrivateMessage(recipient) {
+    const input = document.getElementById(`input-${recipient}`);
+    const message = input.value.trim();
+    
+    if (message) {
+        socket.emit('private_message', {
+            sender: currentUser,
+            recipient: recipient,
+            message: message,
+            private: true
+        });
+        input.value = '';
+    }
+}
+
+// Modify the renderActiveUsers function to add click handlers
+function renderActiveUsers(users) {
+    const usersList = document.getElementById('usersList');
+    usersList.innerHTML = '';
+    
+    users.forEach(user => {
+        const userDiv = document.createElement('div');
+        userDiv.className = 'online-user';
+        userDiv.innerHTML = `
+            <div class="user-avatar">${user.charAt(0).toUpperCase()}</div>
+            <span>${user}</span>
+            <div class="online-indicator"></div>
+        `;
+        
+        // Only add click handler if it's not the current user
+        if (user !== currentUser) {
+            userDiv.style.cursor = 'pointer';
+            userDiv.onclick = () => openPrivateChat(user);
+        }
+        
+        usersList.appendChild(userDiv);
+    });
+}
+
+// Modify the addMessage function to handle private messages
+function addMessage(username, message, isPrivate = false, recipient = null) {
+    const chatBox = document.getElementById('chatBox');
+    const messageDiv = document.createElement('div');
+    const messageClass = username === currentUser ? 'sent' : 'received';
+    messageDiv.className = `message ${messageClass} ${isPrivate ? 'private' : ''}`;
+    
+    const now = new Date();
+    const time = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    
+    let privateLabel = '';
+    if (isPrivate) {
+        privateLabel = username === currentUser ? 
+            `<span class="private-label">Privat til ${recipient}</span>` :
+            '<span class="private-label">Privat melding</span>';
+    }
+    
+    messageDiv.innerHTML = `
+        <div class="message-header">
+            <div class="message-avatar">${username.charAt(0).toUpperCase()}</div>
+            <span class="username">${username}</span>
+            <span class="time">${time}</span>
+        </div>
+        ${privateLabel}
+        <div class="message-content">${message}</div>
+    `;
+    
+    chatBox.appendChild(messageDiv);
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+// Replace the existing private message socket listener
+socket.on('private_message', (data) => {
+    if (data.isReceived) {
+        // Receiving a private message
+        addMessage(data.sender, data.message, true, `fra ${data.sender}`);
+    } else if (data.isSent) {
+        // Sending a private message
+        addMessage(data.sender, data.message, true, `til ${data.recipient}`);
+    }
+});
+
+let privateChats = {};
+
+function openPrivateChat(username) {
+    if (!privateChats[username]) {
+        privateChats[username] = [];
+        
+        // Create container if it doesn't exist
+        let chatsContainer = document.getElementById('privateChats');
+        if (!chatsContainer) {
+            chatsContainer = document.createElement('div');
+            chatsContainer.id = 'privateChats';
+            chatsContainer.className = 'private-chats';
+            document.body.appendChild(chatsContainer);
+        }
+        
+        const chatWindow = document.createElement('div');
+        chatWindow.className = 'private-chat-window';
+        chatWindow.id = `chat-${username}`;
+        
+        chatWindow.innerHTML = `
+            <div class="private-chat-header">
+                <span>${username}</span>
+                <div class="header-controls">
+                    <span class="minimize-btn" onclick="toggleMinimize('${username}')">−</span>
+                    <span class="close-btn" onclick="closePrivateChat('${username}')">&times;</span>
+                </div>
+            </div>
+            <div class="private-chat-messages" id="messages-${username}"></div>
+            <div class="private-chat-input">
+                <input type="text" 
+                       placeholder="Skriv en melding..." 
+                       id="input-${username}"
+                       maxlength="300"
+                       onkeypress="handlePrivateKeyPress(event, '${username}')">
+                <button onclick="sendPrivateMessage('${username}')">Send</button>
+            </div>
+        `;
+        
+        chatsContainer.appendChild(chatWindow);
+    }
+}
+
+function handlePrivateKeyPress(event, recipient) {
+    if (event.key === 'Enter') {
+        sendPrivateMessage(recipient);
+    }
+}
+
+function addPrivateMessage(username, message, sender) {
+    if (!privateChats[username]) {
+        openPrivateChat(username);
+    }
+    
+    const messagesDiv = document.getElementById(`messages-${username}`);
+    const messageElement = document.createElement('div');
+    messageElement.className = `private-message ${sender === currentUser ? 'sent' : 'received'}`;
+    messageElement.innerHTML = `
+        <div class="message-bubble">
+            <div class="message-content">${message}</div>
+            <div class="message-time">${new Date().toLocaleTimeString()}</div>
+        </div>
+    `;
+    
+    messagesDiv.appendChild(messageElement);
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+}
+
+function toggleMinimize(username) {
+    const chatWindow = document.getElementById(`chat-${username}`);
+    chatWindow.classList.toggle('minimized');
+}
+
+function closePrivateChat(username) {
+    const chatWindow = document.getElementById(`chat-${username}`);
+    chatWindow.remove();
+    delete privateChats[username];
+}
+
+function minimizeAllChats() {
+    Object.keys(privateChats).forEach(username => {
+        const chatWindow = document.getElementById(`chat-${username}`);
+        chatWindow.classList.add('minimized');
+    });
+}
+
+// Modify the existing private message socket listener
+socket.on('private_message', (data) => {
+    const otherUser = data.sender === currentUser ? data.recipient : data.sender;
+    addPrivateMessage(otherUser, data.message, data.sender);
+});

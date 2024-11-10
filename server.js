@@ -51,6 +51,29 @@ io.on('connection', (socket) => {
             io.to(data.room).emit('poll_update', poll);
         }
     });
+
+    socket.on('private_message', (data) => {
+        const recipientSocket = findSocketByUsername(data.recipient);
+        if (recipientSocket) {
+            // Send to recipient
+            io.to(recipientSocket.id).emit('private_message', {
+                sender: data.sender,
+                recipient: data.recipient,
+                message: data.message,
+                isReceived: true,
+                private: true
+            });
+            
+            // Send confirmation to sender
+            socket.emit('private_message', {
+                sender: data.sender,
+                recipient: data.recipient,
+                message: data.message,
+                isSent: true,
+                private: true
+            });
+        }
+    });
 });
 
 function getActiveUsersInRoom(room) {
@@ -74,6 +97,16 @@ function getRoomInfo() {
         }
     });
     return roomInfo;
+}
+
+function findSocketByUsername(username) {
+    let foundSocket = null;
+    io.sockets.sockets.forEach((socket) => {
+        if (activeUsers.get(socket.id) === username) {
+            foundSocket = socket;
+        }
+    });
+    return foundSocket;
 }
 
 const PORT = process.env.PORT || 8080;
