@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NORSK DEBATT - Velkommen</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="login-page">
+    <div class="auth-container">
+        <h1>NORSK DEBATT</h1>
+        <div class="input-group">
+            <input type="text" id="username" placeholder="Skriv inn brukernavn" required>
+        </div>
+        <div class="input-group">
+            <label for="room">Velg et rom:</label>
+            <div class="room-selector">
+                <button class="room-button politikk selected" data-room="politikk">
+                    <i class="fas fa-landmark"></i>
+                    Politikk
+                </button>
+                <button class="room-button sport" data-room="sport">
+                    <i class="fas fa-futbol"></i>
+                    Sport
+                </button>
+            </div>
+        </div>
+        <div class="terms">
+            <input type="checkbox" id="agreeTerms">
+            <label for="agreeTerms">Jeg godtar <a href="#" onclick="showTerms()">vilkårene</a></label>
+        </div>
+        <button onclick="enterChat()">Gå til chat</button>
+        <div class="error" id="errorMsg"></div>
+    </div>
+
+    <div id="termsModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeTerms()">&times;</span>
+            <h2>Vilkår og betingelser</h2>
+            <p>Ved å bruke denne chatten godtar du å:</p>
+            <ul style="color: #b0b3b8; margin-left: 20px; margin-bottom: 20px;">
+                <li>Oppføre deg respektfullt mot andre brukere</li>
+                <li>Ikke dele personlig informasjon</li>
+                <li>Ikke sende støtende eller upassende innhold</li>
+                <li>Følge norsk lov og retningslinjer</li>
+            </ul>
+            <p>Brudd på disse vilkårene kan føre til utestengelse fra chatten.</p>
+        </div>
+    </div>
+
+    <script>
+        let selectedRoom = 'politikk'; // Default room
+
+        function showTerms() {
+            document.getElementById('termsModal').style.display = 'block';
+        }
+
+        function closeTerms() {
+            document.getElementById('termsModal').style.display = 'none';
+        }
+
+        function enterChat() {
+            const username = document.getElementById('username').value.trim();
+            const agreeTerms = document.getElementById('agreeTerms').checked;
+            const errorMsg = document.getElementById('errorMsg');
+            errorMsg.className = 'error';
+
+            if (!username) {
+                errorMsg.textContent = 'Vennligst skriv inn et brukernavn';
+                errorMsg.className = 'error visible';
+                return;
+            }
+
+            if (!agreeTerms) {
+                errorMsg.textContent = 'Du må godta vilkårene for å fortsette';
+                errorMsg.className = 'error visible';
+                return;
+            }
+
+            sessionStorage.setItem('currentUser', username);
+            sessionStorage.setItem('chatRoom', selectedRoom);
+            window.location.href = 'chat.html';
+        }
+
+        document.querySelectorAll('.room-button').forEach(button => {
+            button.addEventListener('click', function() {
+                selectedRoom = this.getAttribute('data-room');
+                document.querySelectorAll('.room-button').forEach(btn => {
+                    btn.classList.remove('selected');
+                });
+                this.classList.add('selected');
+            });
+        });
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            if (event.target == document.getElementById('termsModal')) {
+                closeTerms();
+            }
+        }
+
+        // Support for Enter key
+        document.getElementById('username').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                enterChat();
+            }
+        });
+    </script>
+</body>
+</html> 

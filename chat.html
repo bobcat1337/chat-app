@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NORSK DEBATT - Chat</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="chat-page">
+    <div class="header">
+        <button id="toggleUsers" class="toggle-users-btn">
+            <i class="fas fa-bars"></i>
+        </button>
+        <h1>NORSK DEBATT</h1>
+        <button class="logout-btn" onclick="logout()">
+            <i class="fas fa-sign-out-alt"></i>
+        </button>
+    </div>
+
+    <div class="main-container">
+        <div class="users-container">
+            <div class="users-title">Aktive brukere</div>
+            <div id="usersList"></div>
+            
+            <div class="other-rooms">
+                <div class="rooms-title">Andre rom</div>
+                <div id="otherRooms"></div>
+            </div>
+        </div>
+
+        <div class="chat-container">
+            <div class="chat-box" id="chatBox"></div>
+            <div class="input-area">
+                <input type="text" id="message" placeholder="Skriv en melding..." autofocus>
+                <button onclick="sendMessage()">Send</button>
+                <div id="charCount" class="char-count">0/300</div>
+            </div>
+        </div>
+    </div>
+    <div id="typingIndicator" class="typing-indicator"></div>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="chat.js"></script>
+</body>
+</html> 
