@@ -56,7 +56,9 @@ function getRoomInfo() {
     const roomInfo = {};
     io.sockets.adapter.rooms.forEach((clients, room) => {
         if (io.sockets.adapter.sids.get(room)) return; // Skip individual sockets
-        roomInfo[room] = clients.size;
+        if (room === 'politikk' || room === 'sport') {
+            roomInfo[room] = clients.size;
+        }
     });
     return roomInfo;
 }

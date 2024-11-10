@@ -33,12 +33,12 @@ function renderOtherRooms(rooms) {
     const otherRoomsDiv = document.getElementById('otherRooms');
     otherRoomsDiv.innerHTML = '';
     
-    for (const [room, count] of Object.entries(rooms)) {
-        if (room !== chatRoom) {
+    // Only show default rooms
+    Object.entries(rooms).forEach(([room, count]) => {
+        if (room !== chatRoom && (room === 'politikk' || room === 'sport')) {
             const roomButton = document.createElement('button');
-            roomButton.className = `other-room-button ${room}`;
+            roomButton.className = 'other-room-button';
             
-            // Set icon based on room type
             const icon = room === 'politikk' ? 'fas fa-landmark' : 'fas fa-futbol';
             
             roomButton.innerHTML = `
@@ -50,7 +50,7 @@ function renderOtherRooms(rooms) {
             roomButton.onclick = () => switchRoom(room);
             otherRoomsDiv.appendChild(roomButton);
         }
-    }
+    });
 }
 
 function switchRoom(newRoom) {

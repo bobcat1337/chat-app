@@ -16,7 +16,7 @@
         <div class="input-group">
             <label for="room">Velg et rom:</label>
             <div class="room-selector">
-                <button class="room-button politikk selected" data-room="politikk">
+                <button class="room-button politikk" data-room="politikk">
                     <i class="fas fa-landmark"></i>
                     Politikk
                 </button>
@@ -24,6 +24,10 @@
                     <i class="fas fa-futbol"></i>
                     Sport
                 </button>
+                <div class="custom-room">
+                    <input type="text" id="customRoom" placeholder="Eller skriv inn rom-kode" maxlength="20">
+                    <small class="hint">Rom-kode må være mellom 3-20 tegn</small>
+                </div>
             </div>
         </div>
         <div class="terms">
@@ -62,10 +66,10 @@
 
         function enterChat() {
             const username = document.getElementById('username').value.trim();
+            const customRoom = document.getElementById('customRoom').value.trim();
             const agreeTerms = document.getElementById('agreeTerms').checked;
             const errorMsg = document.getElementById('errorMsg');
-            errorMsg.className = 'error';
-
+            
             if (!username) {
                 errorMsg.textContent = 'Vennligst skriv inn et brukernavn';
                 errorMsg.className = 'error visible';
@@ -76,6 +80,16 @@
                 errorMsg.textContent = 'Du må godta vilkårene for å fortsette';
                 errorMsg.className = 'error visible';
                 return;
+            }
+
+            // Check if custom room is entered
+            if (customRoom) {
+                if (customRoom.length < 3) {
+                    errorMsg.textContent = 'Rom-kode må være minst 3 tegn';
+                    errorMsg.className = 'error visible';
+                    return;
+                }
+                selectedRoom = customRoom.toLowerCase().replace(/[^a-z0-9-]/g, '');
             }
 
             sessionStorage.setItem('currentUser', username);
@@ -90,6 +104,7 @@
                     btn.classList.remove('selected');
                 });
                 this.classList.add('selected');
+                document.getElementById('customRoom').value = ''; // Clear custom room input
             });
         });
 
@@ -105,6 +120,13 @@
             if (e.key === 'Enter') {
                 enterChat();
             }
+        });
+
+        // Clear selected room buttons when typing custom room
+        document.getElementById('customRoom').addEventListener('input', function() {
+            document.querySelectorAll('.room-button').forEach(btn => {
+                btn.classList.remove('selected');
+            });
         });
     </script>
 </body>

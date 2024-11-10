@@ -455,39 +455,37 @@ body.login-page {
 
 .room-selector {
     display: flex;
-    justify-content: center;
-    gap: 15px;
-    margin-top: 15px;
+    flex-direction: column;
+    gap: 10px;
 }
 
 .room-button {
     display: flex;
     align-items: center;
-    padding: 8px 16px;
-    border: 1px solid #4a4b4c;
+    gap: 10px;
+    width: 100%;
+    padding: 12px 16px;
+    background: rgba(46, 137, 255, 0.1);
+    border: 1px solid rgba(46, 137, 255, 0.2);
     border-radius: 8px;
-    background-color: #3a3b3c;
     color: #e4e6eb;
     cursor: pointer;
-    transition: all 0.2s ease;
-    font-size: 14px;
-    min-width: 120px;
+    transition: all 0.2s;
+}
+
+.room-button:hover {
+    background: rgba(46, 137, 255, 0.15);
+    transform: translateY(-1px);
+}
+
+.room-button.selected {
+    background: rgba(46, 137, 255, 0.2);
+    border-color: #2e89ff;
 }
 
 .room-button i {
     margin-right: 8px;
     font-size: 16px;
-}
-
-.room-button.selected {
-    background-color: #2e89ff;
-    border-color: #2e89ff;
-    box-shadow: 0 0 0 1px rgba(46, 137, 255, 0.2);
-}
-
-.room-button:hover {
-    transform: translateY(-1px);
-    background-color: #4a4b4c;
 }
 
 .room-button.politikk {
@@ -895,4 +893,31 @@ body.login-page {
     color: #b0b3b8;
     margin-top: 5px;
     text-align: right;
+}
+
+.custom-room {
+    margin-top: 5px;
+}
+
+.custom-room input {
+    width: 100%;
+    padding: 12px 16px;
+    background: rgba(46, 137, 255, 0.1);
+    border: 1px solid rgba(46, 137, 255, 0.2);
+    border-radius: 8px;
+    color: #e4e6eb;
+    transition: all 0.2s;
+}
+
+.custom-room input:focus {
+    background: rgba(46, 137, 255, 0.15);
+    border-color: #2e89ff;
+    outline: none;
+}
+
+.custom-room .hint {
+    color: #b0b3b8;
+    font-size: 12px;
+    margin-top: 4px;
+    margin-left: 4px;
 }
